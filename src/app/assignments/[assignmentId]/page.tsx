@@ -1,4 +1,3 @@
-import { AssignmentActions } from "@/components/AssignmentActions";
 import { Navbar } from "@/components/Navbar";
 import type { DashboardAssignment } from "@/types/domain";
 
@@ -72,7 +71,6 @@ export default function AssignmentPage({ params }: AssignmentPageProps): JSX.Ele
             </p>
           </div>
 
-          <AssignmentActions assignmentId={assignment.id} templateRepoUrl={assignment.templateRepoUrl} />
         </article>
       </main>
     </div>
