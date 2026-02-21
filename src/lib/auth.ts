@@ -19,7 +19,26 @@ export const authConfig = {
   session: {
     strategy: "jwt",
   },
+  callbacks: {
+    jwt({ token, account, profile }) {
+      if (account?.provider === "github") {
+        const profileWithId = profile as { id?: number | string } | undefined;
+        token.githubId =
+          (typeof profileWithId?.id === "number" || typeof profileWithId?.id === "string"
+            ? String(profileWithId.id)
+            : undefined) ?? account.providerAccountId;
+      }
 
+      return token;
+    },
+    session({ session, token }) {
+      if (session.user) {
+        session.user.githubId = token.githubId;
+      }
+
+      return session;
+    },
+  },
   pages: {
     signIn: "/",
   },
