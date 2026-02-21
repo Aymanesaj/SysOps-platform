@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SubmissionStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}
+
+model User {
+  id          String       @id @default(cuid())
+  githubId    String       @unique
+  name        String?
+  email       String?      @unique
+  image       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  submissions Submission[]
+}
+
+model Session {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  startsAt    DateTime
+  endsAt      DateTime
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  assignments Assignment[]
+}
+
+model Assignment {
+  id              String       @id @default(cuid())
+  title           String
+  instructions    String
+  deadline        DateTime
+  templateRepoUrl String
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  sessionId       String
+  session         Session      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  submissions     Submission[]
+
+  @@index([sessionId])
+  @@index([deadline])
+}
+
+model Submission {
+  id           String           @id @default(cuid())
+  repositoryUrl String
+  branchName   String?
+  commitSha    String?
+  status       SubmissionStatus @default(PENDING)
+  submittedAt  DateTime         @default(now())
+  reviewedAt   DateTime?
+  feedback     String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  assignmentId String
+  assignment   Assignment       @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  userId       String
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([assignmentId])
+  @@index([userId])
+  @@unique([assignmentId, userId])
+}
