@@ -1,8 +1,7 @@
-import { AssignmentBadge } from "@/components/AssignmentBadge";
 import { Navbar } from "@/components/Navbar";
-import { SessionCard } from "@/components/SessionCard";
 import { auth } from "@/lib/auth";
 import type { DashboardAssignment, DashboardSession } from "@/types/domain";
+import Link from "next/link";
 
 const sessions: DashboardSession[] = [
   {
@@ -44,35 +43,86 @@ const assignments: DashboardAssignment[] = [
 
 export default async function DashboardPage(): Promise<JSX.Element> {
   const session = await auth();
+  const activeAssignments = assignments.filter((assignment) => assignment.isActive);
+  const completedSubmissions = 1;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar />
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+      <Navbar user={session?.user} />
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-8">
-        <section className="mb-8 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <h1 className="text-2xl font-bold text-slate-900">Main Dashboard</h1>
-          <p className="mt-2 text-sm text-slate-600">
+      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:py-10">
+        <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-indigo-900/20">
+          <h1 className="text-2xl font-semibold tracking-tight">Operations Dashboard</h1>
+          <p className="mt-2 text-sm text-slate-400">
             {session?.user
-              ? `Welcome back, ${session.user.name ?? session.user.email ?? "Operator"}.`
+              ? `Welcome, ${session.user.name ?? session.user.email ?? "Operator"}.`
               : "Sign in with GitHub to access assignment workflows and submissions."}
           </p>
-        </section>
 
-        <section className="mb-8">
-          <h2 className="mb-3 text-lg font-semibold text-slate-900">Available Sessions</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            {sessions.map((clubSession) => (
-              <SessionCard key={clubSession.id} session={clubSession} />
-            ))}
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+              <p className="text-xs uppercase tracking-wide text-slate-400">Active Assignments</p>
+              <p className="mt-2 text-3xl font-semibold text-indigo-300">{activeAssignments.length}</p>
+            </div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+              <p className="text-xs uppercase tracking-wide text-slate-400">Completed Submissions</p>
+              <p className="mt-2 text-3xl font-semibold text-emerald-300">{completedSubmissions}</p>
+            </div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 sm:col-span-2 lg:col-span-1">
+              <p className="text-xs uppercase tracking-wide text-slate-400">Workshops Running</p>
+              <p className="mt-2 text-3xl font-semibold text-slate-200">{sessions.length}</p>
+            </div>
           </div>
         </section>
 
-        <section>
-          <h2 className="mb-3 text-lg font-semibold text-slate-900">Active Assignments</h2>
-          <div className="flex flex-wrap gap-2">
-            {assignments.filter((assignment) => assignment.isActive).map((assignment) => (
-              <AssignmentBadge key={assignment.id} assignment={assignment} />
+        <section className="mt-8">
+          <h2 className="mb-4 text-lg font-semibold text-slate-100">Workshop Overview</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {sessions.map((workshop) => {
+              const workshopAssignments = assignments.filter((assignment) => assignment.sessionId === workshop.id);
+              const progress = Math.min(100, Math.round((completedSubmissions / Math.max(1, workshopAssignments.length)) * 100));
+
+              return (
+                <article
+                  key={workshop.id}
+                  className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg shadow-slate-950/30"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-100">{workshop.title}</h3>
+                      <p className="mt-1 text-sm text-slate-400">{workshop.description}</p>
+                    </div>
+                    <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs text-indigo-200">
+                      {workshopAssignments.length} assignments
+                    </span>
+                  </div>
+
+                  <div className="mt-5">
+                    <div className="mb-2 flex items-center justify-between text-xs text-slate-400">
+                      <span>Progress</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-slate-800">
+                      <div className="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-emerald-400" style={{ width: `${progress}%` }} />
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="mt-8">
+          <h2 className="mb-4 text-lg font-semibold text-slate-100">Active Missions</h2>
+          <div className="flex flex-wrap gap-3">
+            {activeAssignments.map((assignment) => (
+              <Link
+                key={assignment.id}
+                href={`/assignments/${assignment.id}`}
+                className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200 transition hover:bg-emerald-500/20"
+              >
+                {assignment.title}
+              </Link>
             ))}
           </div>
         </section>

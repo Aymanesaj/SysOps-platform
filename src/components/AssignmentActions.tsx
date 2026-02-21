@@ -1,10 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { CheckCircle2, Github, Loader2, PlugZap, Terminal } from "lucide-react";
 
 type AssignmentActionsProps = {
   assignmentId: string;
   templateRepoUrl: string;
+};
+
+type TerminalLog = {
+  level: "info" | "success" | "error";
+  message: string;
 };
 
 function parseTemplateRepo(url: string): { owner: string; repo: string } | null {
@@ -23,17 +30,24 @@ function parseTemplateRepo(url: string): { owner: string; repo: string } | null 
 export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentActionsProps): JSX.Element {
   const templateRepository = useMemo(() => parseTemplateRepo(templateRepoUrl), [templateRepoUrl]);
   const [repositoryUrl, setRepositoryUrl] = useState<string>("");
-  const [statusMessage, setStatusMessage] = useState<string>("");
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [isLinking, setIsLinking] = useState<boolean>(false);
+  const [terminalLogs, setTerminalLogs] = useState<TerminalLog[]>([
+    { level: "info", message: "$ awaiting assignment command..." },
+  ]);
+
+  const addLog = (level: TerminalLog["level"], message: string): void => {
+    setTerminalLogs((currentLogs) => [...currentLogs.slice(-5), { level, message }]);
+  };
 
   const handleGenerateRepository = async (): Promise<void> => {
     if (!templateRepository) {
-      setStatusMessage("Template repository URL is invalid.");
+      addLog("error", "template repo URL is invalid.");
       return;
     }
 
-    setIsSubmitting(true);
-    setStatusMessage("Generating repository...");
+    setIsGenerating(true);
+    addLog("info", "$ generating repository from template...");
 
     try {
       const payload = {
@@ -51,25 +65,27 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
       const data = (await response.json()) as { repository?: { htmlUrl: string }; error?: string };
 
       if (!response.ok || !data.repository) {
-        setStatusMessage(data.error ?? "Failed to generate repository.");
+        addLog("error", data.error ?? "failed to generate repository.");
         return;
       }
 
       setRepositoryUrl(data.repository.htmlUrl);
-      setStatusMessage(`Repository generated: ${data.repository.htmlUrl}`);
+      addLog("success", `repository ready: ${data.repository.htmlUrl}`);
+    } catch {
+      addLog("error", "network error while generating repository.");
     } finally {
-      setIsSubmitting(false);
+      setIsGenerating(false);
     }
   };
 
   const handleLinkRepository = async (): Promise<void> => {
     if (!repositoryUrl.trim()) {
-      setStatusMessage("Please paste a GitHub repository URL first.");
+      addLog("error", "provide a repository URL first.");
       return;
     }
 
-    setIsSubmitting(true);
-    setStatusMessage("Saving submission...");
+    setIsLinking(true);
+    addLog("info", "$ linking repository to assignment...");
 
     try {
       const response = await fetch("/api/submissions", {
@@ -81,19 +97,21 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
       const data = (await response.json()) as { error?: string };
 
       if (!response.ok) {
-        setStatusMessage(data.error ?? "Failed to link repository.");
+        addLog("error", data.error ?? "failed to link repository.");
         return;
       }
 
-      setStatusMessage("Repository linked successfully.");
+      addLog("success", "submission stored successfully.");
+    } catch {
+      addLog("error", "network error while linking repository.");
     } finally {
-      setIsSubmitting(false);
+      setIsLinking(false);
     }
   };
 
   return (
-    <section className="mt-6 space-y-3">
-      <label className="block text-sm font-medium text-slate-700" htmlFor="repository-url">
+    <section className="space-y-4">
+      <label className="block text-sm font-medium text-slate-300" htmlFor="repository-url">
         Submission Repository URL
       </label>
       <input
@@ -102,29 +120,62 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
         value={repositoryUrl}
         onChange={(event) => setRepositoryUrl(event.target.value)}
         placeholder="https://github.com/your-org/your-repo"
-        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none ring-indigo-500 transition placeholder:text-slate-500 focus:ring"
       />
 
       <div className="flex flex-wrap gap-3">
         <button
           type="button"
           onClick={handleGenerateRepository}
-          disabled={isSubmitting}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-60"
+          disabled={isGenerating || isLinking}
+          className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Generate Repo
+          {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Github className="h-4 w-4" />}
+          {isGenerating ? "Generating..." : "Generate Repo"}
         </button>
         <button
           type="button"
           onClick={handleLinkRepository}
-          disabled={isSubmitting}
-          className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-100 disabled:opacity-60"
+          disabled={isGenerating || isLinking}
+          className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Link Repo
+          {isLinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlugZap className="h-4 w-4" />}
+          {isLinking ? "Linking..." : "Link Repo"}
         </button>
       </div>
 
-      {statusMessage ? <p className="text-sm text-slate-600">{statusMessage}</p> : null}
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-xl border border-slate-700 bg-[#0b1220] p-4"
+      >
+        <div className="mb-3 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">
+          <Terminal className="h-4 w-4" />
+          Mission Terminal Output
+        </div>
+
+        <div className="space-y-1 font-mono text-xs text-slate-300">
+          <AnimatePresence initial={false}>
+            {terminalLogs.map((log, index) => (
+              <motion.p
+                key={`${log.message}-${index}`}
+                initial={{ opacity: 0, x: -4 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={
+                  log.level === "error"
+                    ? "text-red-300"
+                    : log.level === "success"
+                      ? "text-emerald-300"
+                      : "text-slate-300"
+                }
+              >
+                {log.level === "success" ? <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" /> : null}
+                {log.message}
+              </motion.p>
+            ))}
+          </AnimatePresence>
+        </div>
+      </motion.div>
     </section>
   );
 }
