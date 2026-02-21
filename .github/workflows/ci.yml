@@ -34,6 +34,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Audit fix nested vulnerabilities
+        run: npm audit fix --audit-level=high || true
+
       - name: Generate Prisma Client
         run: npx prisma generate
         env:

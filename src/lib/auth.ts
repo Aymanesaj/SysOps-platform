@@ -21,21 +21,25 @@ export const authConfig = {
   },
   callbacks: {
     jwt({ token, account, profile }) {
-      token.id = token.sub;
+      token.id = typeof token.sub === "string" ? token.sub : "";
 
       if (account?.provider === "github") {
         const profileWithId = profile as { id?: number | string } | undefined;
-        token.githubId =
-          (typeof profileWithId?.id === "number" || typeof profileWithId?.id === "string"
+        const derivedGithubId =
+          typeof profileWithId?.id === "number" || typeof profileWithId?.id === "string"
             ? String(profileWithId.id)
-            : undefined) ?? account.providerAccountId;
+            : account.providerAccountId;
+
+        token.githubId = derivedGithubId;
       }
+
+      token.githubId = typeof token.githubId === "string" ? token.githubId : "";
 
       return token;
     },
     session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id ?? "";
+        session.user.id = token.id;
         session.user.githubId = token.githubId;
       }
 
