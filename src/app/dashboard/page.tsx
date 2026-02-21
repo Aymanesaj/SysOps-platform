@@ -1,22 +1,27 @@
+import Link from "next/link";
+import { ArrowRight, Flame, GitBranch, ShieldCheck } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { auth } from "@/lib/auth";
 import type { DashboardAssignment, DashboardSession } from "@/types/domain";
-import Link from "next/link";
 
-const sessions: DashboardSession[] = [
+const sessions: Array<DashboardSession & { category: string; completed: number }> = [
   {
     id: "session-1",
     title: "CI/CD Foundations",
+    category: "CI/CD",
     description: "Set up and harden your first production-grade GitHub Actions pipeline.",
     startsAt: "2026-03-01T18:00:00.000Z",
     endsAt: "2026-03-01T20:00:00.000Z",
+    completed: 1,
   },
   {
     id: "session-2",
     title: "Containers in Practice",
+    category: "Docker",
     description: "Package and deploy a Next.js service with repeatable Docker workflows.",
     startsAt: "2026-03-08T18:00:00.000Z",
     endsAt: "2026-03-08T20:00:00.000Z",
+    completed: 0,
   },
 ];
 
@@ -43,87 +48,77 @@ const assignments: DashboardAssignment[] = [
 
 export default async function DashboardPage(): Promise<JSX.Element> {
   const session = await auth();
-  const activeAssignments = assignments.filter((assignment) => assignment.isActive);
-  const completedSubmissions = 1;
+  const activeAssignments = assignments.filter((assignment) => assignment.isActive).length;
+  const completedTasks = sessions.reduce((count, workshop) => count + workshop.completed, 0);
+  const currentStreak = 4;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <Navbar user={session?.user} />
 
       <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:py-10">
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 shadow-2xl shadow-indigo-900/20">
-          <h1 className="text-2xl font-semibold tracking-tight">Operations Dashboard</h1>
+        <header className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-xl shadow-slate-950/40">
+          <h1 className="text-2xl font-semibold tracking-tight">Member Command Center</h1>
           <p className="mt-2 text-sm text-slate-400">
-            {session?.user
-              ? `Welcome, ${session.user.name ?? session.user.email ?? "Operator"}.`
-              : "Sign in with GitHub to access assignment workflows and submissions."}
+            Monitor workshop progression, launch missions, and keep your engineering streak alive.
           </p>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-              <p className="text-xs uppercase tracking-wide text-slate-400">Active Assignments</p>
-              <p className="mt-2 text-3xl font-semibold text-indigo-300">{activeAssignments.length}</p>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+              <p className="text-xs uppercase tracking-wider text-slate-500">Active Assignments</p>
+              <p className="mt-2 text-3xl font-semibold text-indigo-300">{activeAssignments}</p>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-              <p className="text-xs uppercase tracking-wide text-slate-400">Completed Submissions</p>
-              <p className="mt-2 text-3xl font-semibold text-emerald-300">{completedSubmissions}</p>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+              <p className="text-xs uppercase tracking-wider text-slate-500">Completed Tasks</p>
+              <p className="mt-2 text-3xl font-semibold text-emerald-300">{completedTasks}</p>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 sm:col-span-2 lg:col-span-1">
-              <p className="text-xs uppercase tracking-wide text-slate-400">Workshops Running</p>
-              <p className="mt-2 text-3xl font-semibold text-slate-200">{sessions.length}</p>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+              <p className="text-xs uppercase tracking-wider text-slate-500">Current Streak</p>
+              <p className="mt-2 inline-flex items-center gap-2 text-3xl font-semibold text-amber-300">
+                <Flame className="h-6 w-6" /> {currentStreak} days
+              </p>
             </div>
           </div>
-        </section>
+        </header>
 
         <section className="mt-8">
-          <h2 className="mb-4 text-lg font-semibold text-slate-100">Workshop Overview</h2>
+          <h2 className="mb-4 text-lg font-semibold">Workshop Grid</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {sessions.map((workshop) => {
               const workshopAssignments = assignments.filter((assignment) => assignment.sessionId === workshop.id);
-              const progress = Math.min(100, Math.round((completedSubmissions / Math.max(1, workshopAssignments.length)) * 100));
+              const progress = Math.round((workshop.completed / Math.max(1, workshopAssignments.length)) * 100);
 
               return (
-                <article
-                  key={workshop.id}
-                  className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg shadow-slate-950/30"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-100">{workshop.title}</h3>
-                      <p className="mt-1 text-sm text-slate-400">{workshop.description}</p>
-                    </div>
-                    <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs text-indigo-200">
-                      {workshopAssignments.length} assignments
+                <article key={workshop.id} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="rounded-full border border-indigo-500/40 bg-indigo-500/10 px-3 py-1 text-xs text-indigo-200">
+                      {workshop.category}
                     </span>
+                    <span className="text-xs text-slate-400">{workshopAssignments.length} assignments</span>
                   </div>
 
-                  <div className="mt-5">
+                  <h3 className="mt-4 text-lg font-semibold">{workshop.title}</h3>
+                  <p className="mt-1 text-sm text-slate-400">{workshop.description}</p>
+
+                  <div className="mt-4">
                     <div className="mb-2 flex items-center justify-between text-xs text-slate-400">
-                      <span>Progress</span>
+                      <span className="inline-flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> Completion</span>
                       <span>{progress}%</span>
                     </div>
                     <div className="h-2 rounded-full bg-slate-800">
-                      <div className="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-emerald-400" style={{ width: `${progress}%` }} />
+                      <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500" style={{ width: `${progress}%` }} />
                     </div>
                   </div>
+
+                  <Link
+                    href={`/assignments/${workshopAssignments[0]?.id ?? "assignment-1"}`}
+                    className="mt-5 inline-flex items-center gap-2 rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-3.5 py-2 text-sm font-semibold text-indigo-200 transition hover:shadow-[0_0_20px_rgba(99,102,241,0.35)]"
+                  >
+                    <GitBranch className="h-4 w-4" /> Launch <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </article>
               );
             })}
-          </div>
-        </section>
-
-        <section className="mt-8">
-          <h2 className="mb-4 text-lg font-semibold text-slate-100">Active Missions</h2>
-          <div className="flex flex-wrap gap-3">
-            {activeAssignments.map((assignment) => (
-              <Link
-                key={assignment.id}
-                href={`/assignments/${assignment.id}`}
-                className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200 transition hover:bg-emerald-500/20"
-              >
-                {assignment.title}
-              </Link>
-            ))}
           </div>
         </section>
       </main>

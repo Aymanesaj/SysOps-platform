@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, Github, Loader2, PlugZap, Terminal } from "lucide-react";
+import { Github, Loader2, PlugZap, Terminal } from "lucide-react";
 
 type AssignmentActionsProps = {
   assignmentId: string;
@@ -27,27 +27,35 @@ function parseTemplateRepo(url: string): { owner: string; repo: string } | null 
   };
 }
 
+function wait(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
+}
+
 export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentActionsProps): JSX.Element {
   const templateRepository = useMemo(() => parseTemplateRepo(templateRepoUrl), [templateRepoUrl]);
   const [repositoryUrl, setRepositoryUrl] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [isLinking, setIsLinking] = useState<boolean>(false);
   const [terminalLogs, setTerminalLogs] = useState<TerminalLog[]>([
-    { level: "info", message: "$ awaiting assignment command..." },
+    { level: "info", message: "> Awaiting command..." },
   ]);
 
   const addLog = (level: TerminalLog["level"], message: string): void => {
-    setTerminalLogs((currentLogs) => [...currentLogs.slice(-5), { level, message }]);
+    setTerminalLogs((currentLogs) => [...currentLogs.slice(-7), { level, message }]);
   };
 
   const handleGenerateRepository = async (): Promise<void> => {
     if (!templateRepository) {
-      addLog("error", "template repo URL is invalid.");
+      addLog("error", "> Invalid template repository URL.");
       return;
     }
 
     setIsGenerating(true);
-    addLog("info", "$ generating repository from template...");
+    addLog("info", "> Contacting GitHub API...");
+    await wait(200);
+    addLog("info", "> Cloning Template...");
 
     try {
       const payload = {
@@ -65,14 +73,14 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
       const data = (await response.json()) as { repository?: { htmlUrl: string }; error?: string };
 
       if (!response.ok || !data.repository) {
-        addLog("error", data.error ?? "failed to generate repository.");
+        addLog("error", `> Error: ${data.error ?? "Failed to generate repository."}`);
         return;
       }
 
       setRepositoryUrl(data.repository.htmlUrl);
-      addLog("success", `repository ready: ${data.repository.htmlUrl}`);
+      addLog("success", `> Success: Repository Ready (${data.repository.htmlUrl})`);
     } catch {
-      addLog("error", "network error while generating repository.");
+      addLog("error", "> Network error during generation.");
     } finally {
       setIsGenerating(false);
     }
@@ -80,12 +88,12 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
 
   const handleLinkRepository = async (): Promise<void> => {
     if (!repositoryUrl.trim()) {
-      addLog("error", "provide a repository URL first.");
+      addLog("error", "> Provide a repository URL first.");
       return;
     }
 
     setIsLinking(true);
-    addLog("info", "$ linking repository to assignment...");
+    addLog("info", "> Submitting mission artifact...");
 
     try {
       const response = await fetch("/api/submissions", {
@@ -97,13 +105,13 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
       const data = (await response.json()) as { error?: string };
 
       if (!response.ok) {
-        addLog("error", data.error ?? "failed to link repository.");
+        addLog("error", `> Error: ${data.error ?? "Failed to link repository."}`);
         return;
       }
 
-      addLog("success", "submission stored successfully.");
+      addLog("success", "> Submission linked successfully.");
     } catch {
-      addLog("error", "network error while linking repository.");
+      addLog("error", "> Network error while linking repository.");
     } finally {
       setIsLinking(false);
     }
@@ -124,7 +132,8 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
       />
 
       <div className="flex flex-wrap gap-3">
-        <button
+        <motion.button
+          whileTap={{ scale: 0.98 }}
           type="button"
           onClick={handleGenerateRepository}
           disabled={isGenerating || isLinking}
@@ -132,7 +141,8 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
         >
           {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Github className="h-4 w-4" />}
           {isGenerating ? "Generating..." : "Generate Repo"}
-        </button>
+        </motion.button>
+
         <button
           type="button"
           onClick={handleLinkRepository}
@@ -144,23 +154,18 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
         </button>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-xl border border-slate-700 bg-[#0b1220] p-4"
-      >
-        <div className="mb-3 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">
+      <div className="rounded-xl border border-slate-700 bg-[#0b1220] p-4">
+        <div className="mb-2 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">
           <Terminal className="h-4 w-4" />
-          Mission Terminal Output
+          Mini Terminal Output
         </div>
-
-        <div className="space-y-1 font-mono text-xs text-slate-300">
+        <div className="space-y-1 font-mono text-xs">
           <AnimatePresence initial={false}>
             {terminalLogs.map((log, index) => (
               <motion.p
                 key={`${log.message}-${index}`}
-                initial={{ opacity: 0, x: -4 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
                 className={
                   log.level === "error"
                     ? "text-red-300"
@@ -169,13 +174,12 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
                       : "text-slate-300"
                 }
               >
-                {log.level === "success" ? <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" /> : null}
                 {log.message}
               </motion.p>
             ))}
           </AnimatePresence>
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }

@@ -39,10 +39,10 @@ export const authConfig = {
     },
     session({ session, token }) {
       if (session.user) {
-        // Force TypeScript to treat these as strings
-        session.user.id = token.id as string;
-        session.user.githubId = token.githubId as string;
+        session.user.id = token.id;
+        session.user.githubId = token.githubId;
       }
+
       return session;
     },
   },
