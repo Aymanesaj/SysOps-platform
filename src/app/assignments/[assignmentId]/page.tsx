@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, use } from "react"; // Added use
 import { CheckCircle2, Clock3, Copy, ExternalLink } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { AssignmentActions } from "@/components/AssignmentActions";
 import type { DashboardAssignment } from "@/types/domain";
 
 type AssignmentPageProps = {
-  params: {
+  params: Promise<{
     assignmentId: string;
-  };
+  }>;
 };
 
 type MissionStatus = "Pending" | "Reviewing" | "Accepted";
@@ -42,7 +42,6 @@ const assignmentsById: Record<string, DashboardAssignment & { status: MissionSta
 function renderMarkdownLikeText(instructions: string): JSX.Element[] {
   return instructions.split("\n").map((line, index) => {
     const key = `${line}-${index}`;
-
     if (line.startsWith("## ")) {
       return (
         <h3 key={key} className="mt-5 text-base font-semibold text-slate-100 first:mt-0">
@@ -50,7 +49,6 @@ function renderMarkdownLikeText(instructions: string): JSX.Element[] {
         </h3>
       );
     }
-
     if (line.startsWith("- ")) {
       return (
         <li key={key} className="ml-5 list-disc text-sm text-slate-300">
@@ -58,11 +56,9 @@ function renderMarkdownLikeText(instructions: string): JSX.Element[] {
         </li>
       );
     }
-
     if (!line.trim()) {
       return <div key={key} className="h-2" />;
     }
-
     return (
       <p key={key} className="text-sm leading-7 text-slate-300">
         {line}
@@ -72,15 +68,33 @@ function renderMarkdownLikeText(instructions: string): JSX.Element[] {
 }
 
 export default function AssignmentPage({ params }: AssignmentPageProps): JSX.Element {
-  const assignment = assignmentsById[params.assignmentId];
+  // 1. Unwrap params immediately (Next.js 15 Requirement)
+  const { assignmentId } = use(params);
+  
+  // 2. State & Hooks must come BEFORE any conditional returns
   const [now, setNow] = useState<number>(Date.now());
   const [copied, setCopied] = useState<boolean>(false);
+
+  const assignment = assignmentsById[assignmentId];
 
   useEffect(() => {
     const intervalId = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(intervalId);
   }, []);
 
+  // 3. Move the countdown logic UP so it's always called
+  const remainingTime = assignment 
+    ? Math.max(0, new Date(assignment.deadline).getTime() - now) 
+    : 0;
+
+  const countdown = useMemo(() => {
+    const days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((remainingTime / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((remainingTime / (1000 * 60)) % 60);
+    return `${days}d ${hours}h ${minutes}m`;
+  }, [remainingTime]);
+
+  // 4. NOW we can check if the assignment exists
   if (!assignment) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -93,15 +107,6 @@ export default function AssignmentPage({ params }: AssignmentPageProps): JSX.Ele
     );
   }
 
-  const remainingTime = Math.max(0, new Date(assignment.deadline).getTime() - now);
-  const countdown = useMemo(() => {
-    const days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((remainingTime / (1000 * 60 * 60)) % 24);
-    const minutes = Math.floor((remainingTime / (1000 * 60)) % 60);
-
-    return `${days}d ${hours}h ${minutes}m`;
-  }, [remainingTime]);
-
   const statusStyles: Record<MissionStatus, string> = {
     Pending: "border-amber-500/40 bg-amber-500/10 text-amber-200",
     Reviewing: "border-indigo-500/40 bg-indigo-500/10 text-indigo-200",
@@ -111,11 +116,9 @@ export default function AssignmentPage({ params }: AssignmentPageProps): JSX.Ele
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <Navbar />
-
       <main className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 lg:grid-cols-[7fr_3fr]">
         <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
           <h1 className="text-2xl font-semibold tracking-tight">{assignment.title}</h1>
-
           <div className="mt-5 overflow-hidden rounded-xl border border-slate-800 bg-[#0b1220]">
             <div className="flex items-center gap-2 border-b border-slate-800 px-4 py-2">
               <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
@@ -125,7 +128,6 @@ export default function AssignmentPage({ params }: AssignmentPageProps): JSX.Ele
             </div>
             <div className="space-y-2 p-4">{renderMarkdownLikeText(assignment.instructions)}</div>
           </div>
-
           <div className="mt-6 border-t border-slate-800 pt-6">
             <AssignmentActions assignmentId={assignment.id} templateRepoUrl={assignment.templateRepoUrl} />
           </div>
@@ -133,7 +135,6 @@ export default function AssignmentPage({ params }: AssignmentPageProps): JSX.Ele
 
         <aside className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 lg:sticky lg:top-24 lg:h-fit">
           <h2 className="text-sm uppercase tracking-wide text-slate-400">Mission Brief</h2>
-
           <div className="mt-5 space-y-5">
             <div>
               <p className="text-xs text-slate-500">Countdown</p>
@@ -141,18 +142,12 @@ export default function AssignmentPage({ params }: AssignmentPageProps): JSX.Ele
                 <Clock3 className="h-4 w-4" /> {countdown}
               </p>
             </div>
-
             <div>
               <p className="text-xs text-slate-500">Template Repository</p>
               <div className="mt-2 rounded-lg border border-slate-800 bg-slate-950/70 p-3">
                 <p className="break-all text-xs text-slate-300">{assignment.templateRepoUrl}</p>
                 <div className="mt-3 flex gap-2">
-                  <a
-                    href={assignment.templateRepoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-md border border-slate-700 px-2.5 py-1.5 text-xs text-slate-300 transition hover:border-indigo-400/60"
-                  >
+                  <a href={assignment.templateRepoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-md border border-slate-700 px-2.5 py-1.5 text-xs text-slate-300 transition hover:border-indigo-400/60">
                     <ExternalLink className="h-3.5 w-3.5" /> Open
                   </a>
                   <button
@@ -169,7 +164,6 @@ export default function AssignmentPage({ params }: AssignmentPageProps): JSX.Ele
                 </div>
               </div>
             </div>
-
             <div>
               <p className="text-xs text-slate-500">Submission Status</p>
               <span className={`mt-2 inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles[assignment.status]}`}>

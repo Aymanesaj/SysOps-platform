@@ -39,10 +39,10 @@ export const authConfig = {
     },
     session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id;
-        session.user.githubId = token.githubId;
+        // Explicitly cast 'unknown' to 'string' for the build to pass
+        session.user.id = token.id as string;
+        session.user.githubId = token.githubId as string;
       }
-
       return session;
     },
   },
