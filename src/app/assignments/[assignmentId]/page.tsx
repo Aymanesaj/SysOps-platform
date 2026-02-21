@@ -71,20 +71,6 @@ export default function AssignmentPage({ params }: AssignmentPageProps): JSX.Ele
             </p>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              type="button"
-              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
-            >
-              Generate Repo
-            </button>
-            <button
-              type="button"
-              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-100"
-            >
-              Link Repo
-            </button>
-          </div>
         </article>
       </main>
     </div>
