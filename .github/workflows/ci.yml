@@ -21,11 +21,38 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Restore dependency and Next.js cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-
+
       - name: Install dependencies
         run: npm install
 
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+
       - name: Run lint
         run: npm run lint
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+          AUTH_SECRET: dummy
+          AUTH_GITHUB_ID: dummy
+          AUTH_GITHUB_SECRET: dummy
+          GITHUB_TEMPLATE_TOKEN: dummy
 
       - name: Build application
         run: npm run build
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+          AUTH_SECRET: dummy
+          AUTH_GITHUB_ID: dummy
+          AUTH_GITHUB_SECRET: dummy
+          GITHUB_TEMPLATE_TOKEN: dummy

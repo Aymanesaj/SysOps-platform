@@ -21,6 +21,8 @@ export const authConfig = {
   },
   callbacks: {
     jwt({ token, account, profile }) {
+      token.id = token.sub;
+
       if (account?.provider === "github") {
         const profileWithId = profile as { id?: number | string } | undefined;
         token.githubId =
@@ -33,6 +35,7 @@ export const authConfig = {
     },
     session({ session, token }) {
       if (session.user) {
+        session.user.id = token.id ?? "";
         session.user.githubId = token.githubId;
       }
 
