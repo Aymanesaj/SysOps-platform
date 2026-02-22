@@ -33,6 +33,12 @@ function wait(milliseconds: number): Promise<void> {
   });
 }
 
+const primaryButtonClass =
+  "inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-blue-500 hover:shadow-[0_0_22px_rgba(37,99,235,0.45)] disabled:cursor-not-allowed disabled:opacity-60";
+
+const secondaryButtonClass =
+  "inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-zinc-200 transition-all duration-200 hover:border-zinc-500 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60";
+
 export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentActionsProps): JSX.Element {
   const templateRepository = useMemo(() => parseTemplateRepo(templateRepoUrl), [templateRepoUrl]);
   const [repositoryUrl, setRepositoryUrl] = useState<string>("");
@@ -119,7 +125,7 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
 
   return (
     <section className="space-y-4">
-      <label className="block text-sm font-medium text-slate-300" htmlFor="repository-url">
+      <label className="block text-sm font-medium text-zinc-300" htmlFor="repository-url">
         Submission Repository URL
       </label>
       <input
@@ -128,16 +134,16 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
         value={repositoryUrl}
         onChange={(event) => setRepositoryUrl(event.target.value)}
         placeholder="https://github.com/your-org/your-repo"
-        className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none ring-indigo-500 transition placeholder:text-slate-500 focus:ring"
+        className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 outline-none ring-blue-500 transition-all duration-200 placeholder:text-zinc-500 focus:ring"
       />
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <motion.button
           whileTap={{ scale: 0.98 }}
           type="button"
           onClick={handleGenerateRepository}
           disabled={isGenerating || isLinking}
-          className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className={primaryButtonClass}
         >
           {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Github className="h-4 w-4" />}
           {isGenerating ? "Generating..." : "Generate Repo"}
@@ -147,15 +153,15 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
           type="button"
           onClick={handleLinkRepository}
           disabled={isGenerating || isLinking}
-          className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+          className={secondaryButtonClass}
         >
           {isLinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlugZap className="h-4 w-4" />}
           {isLinking ? "Linking..." : "Link Repo"}
         </button>
       </div>
 
-      <div className="rounded-xl border border-slate-700 bg-[#0b1220] p-4">
-        <div className="mb-2 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 shadow-[0_0_24px_rgba(168,85,247,0.08)]">
+        <div className="mb-2 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-zinc-500">
           <Terminal className="h-4 w-4" />
           Mini Terminal Output
         </div>
@@ -168,10 +174,10 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
                 animate={{ opacity: 1, y: 0 }}
                 className={
                   log.level === "error"
-                    ? "text-red-300"
+                    ? "text-rose-400"
                     : log.level === "success"
-                      ? "text-emerald-300"
-                      : "text-slate-300"
+                      ? "text-emerald-400"
+                      : "text-zinc-300"
                 }
               >
                 {log.message}
