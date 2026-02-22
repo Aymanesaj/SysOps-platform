@@ -34,10 +34,10 @@ function wait(milliseconds: number): Promise<void> {
 }
 
 const primaryButtonClass =
-  "inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-blue-500 hover:shadow-[0_0_22px_rgba(37,99,235,0.45)] disabled:cursor-not-allowed disabled:opacity-60";
 
 const secondaryButtonClass =
-  "inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-zinc-200 transition-all duration-200 hover:border-zinc-500 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60";
 
 export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentActionsProps): JSX.Element {
   const templateRepository = useMemo(() => parseTemplateRepo(templateRepoUrl), [templateRepoUrl]);
@@ -125,7 +125,7 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
 
   return (
     <section className="space-y-4">
-      <label className="block text-sm font-medium text-slate-700" htmlFor="repository-url">
+      <label className="block text-sm font-medium text-zinc-300" htmlFor="repository-url">
         Submission Repository URL
       </label>
       <input
@@ -134,7 +134,7 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
         value={repositoryUrl}
         onChange={(event) => setRepositoryUrl(event.target.value)}
         placeholder="https://github.com/your-org/your-repo"
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none ring-indigo-500 transition placeholder:text-slate-400 focus:ring"
+        className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 outline-none ring-blue-500 transition-all duration-200 placeholder:text-zinc-500 focus:ring"
       />
 
       <div className="flex flex-wrap items-center gap-3">
@@ -160,8 +160,8 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
         </button>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <div className="mb-2 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 shadow-[0_0_24px_rgba(168,85,247,0.08)]">
+        <div className="mb-2 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-zinc-500">
           <Terminal className="h-4 w-4" />
           Mini Terminal Output
         </div>
@@ -174,10 +174,10 @@ export function AssignmentActions({ assignmentId, templateRepoUrl }: AssignmentA
                 animate={{ opacity: 1, y: 0 }}
                 className={
                   log.level === "error"
-                    ? "text-red-500"
+                    ? "text-rose-400"
                     : log.level === "success"
-                      ? "text-emerald-600"
-                      : "text-slate-600"
+                      ? "text-emerald-400"
+                      : "text-zinc-300"
                 }
               >
                 {log.message}
