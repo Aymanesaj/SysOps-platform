@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { auth } from "@/lib/auth";
+import "./globals.css";
 
 export default async function RootLayout({ children }: { children: ReactNode }): Promise<JSX.Element> {
   const session = await auth();
