@@ -53,66 +53,75 @@ export default async function DashboardPage(): Promise<JSX.Element> {
   const currentStreak = 4;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <Navbar user={session?.user} />
 
-      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:py-10">
-        <header className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-xl shadow-slate-950/40">
-          <h1 className="text-2xl font-semibold tracking-tight">Member Command Center</h1>
-          <p className="mt-2 text-sm text-slate-400">
+      <main className="mx-auto w-full max-w-6xl space-y-8 px-6 py-8">
+        <header className="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Member Command Center</h1>
+            <p className="text-sm text-slate-500">
             Monitor workshop progression, launch missions, and keep your engineering streak alive.
-          </p>
+            </p>
+          </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-xs uppercase tracking-wider text-slate-500">Active Assignments</p>
-              <p className="mt-2 text-3xl font-semibold text-indigo-300">{activeAssignments}</p>
+              <p className="mt-2 text-3xl font-semibold text-indigo-600">{activeAssignments}</p>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-xs uppercase tracking-wider text-slate-500">Completed Tasks</p>
-              <p className="mt-2 text-3xl font-semibold text-emerald-300">{completedTasks}</p>
+              <p className="mt-2 text-3xl font-semibold text-emerald-600">{completedTasks}</p>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-xs uppercase tracking-wider text-slate-500">Current Streak</p>
-              <p className="mt-2 inline-flex items-center gap-2 text-3xl font-semibold text-amber-300">
+              <p className="mt-2 inline-flex items-center gap-2 text-3xl font-semibold text-amber-600">
                 <Flame className="h-6 w-6" /> {currentStreak} days
               </p>
             </div>
           </div>
         </header>
 
-        <section className="mt-8">
-          <h2 className="mb-4 text-lg font-semibold">Workshop Grid</h2>
-          <div className="grid gap-4 md:grid-cols-2">
+        <section className="space-y-4">
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Workshop Grid</h2>
+          <div className="grid gap-5 md:grid-cols-2">
             {sessions.map((workshop) => {
               const workshopAssignments = assignments.filter((assignment) => assignment.sessionId === workshop.id);
               const progress = Math.round((workshop.completed / Math.max(1, workshopAssignments.length)) * 100);
 
               return (
-                <article key={workshop.id} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+                <article
+                  key={workshop.id}
+                  className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="rounded-full border border-indigo-500/40 bg-indigo-500/10 px-3 py-1 text-xs text-indigo-200">
+                    <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
                       {workshop.category}
                     </span>
-                    <span className="text-xs text-slate-400">{workshopAssignments.length} assignments</span>
+                    <span className="text-xs text-slate-500">{workshopAssignments.length} assignments</span>
                   </div>
 
-                  <h3 className="mt-4 text-lg font-semibold">{workshop.title}</h3>
-                  <p className="mt-1 text-sm text-slate-400">{workshop.description}</p>
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-semibold text-slate-900">{workshop.title}</h3>
+                    <p className="text-sm text-slate-500">{workshop.description}</p>
+                  </div>
 
-                  <div className="mt-4">
-                    <div className="mb-2 flex items-center justify-between text-xs text-slate-400">
-                      <span className="inline-flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> Completion</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs text-slate-500">
+                      <span className="inline-flex items-center gap-1">
+                        <ShieldCheck className="h-3.5 w-3.5" /> Completion
+                      </span>
                       <span>{progress}%</span>
                     </div>
-                    <div className="h-2 rounded-full bg-slate-800">
+                    <div className="h-2 rounded-full bg-slate-200">
                       <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500" style={{ width: `${progress}%` }} />
                     </div>
                   </div>
 
                   <Link
                     href={`/assignments/${workshopAssignments[0]?.id ?? "assignment-1"}`}
-                    className="mt-5 inline-flex items-center gap-2 rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-3.5 py-2 text-sm font-semibold text-indigo-200 transition hover:shadow-[0_0_20px_rgba(99,102,241,0.35)]"
+                    className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
                   >
                     <GitBranch className="h-4 w-4" /> Launch <ArrowRight className="h-4 w-4" />
                   </Link>
